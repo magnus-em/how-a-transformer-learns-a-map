@@ -1,0 +1,15 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -e '.[dev]'
+      - run: pytest -q
+      - run: maplearn train --out runs/smoke --routes 32 --eval-routes 16 --epochs 1 --batch-size 16 --d-model 32 --checkpoints 1
+      - run: maplearn analyze --checkpoint runs/smoke/step-000002.pt --out runs/analysis --routes 32

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maplearn"
+version = "0.1.0"
+description = "Grid navigation transformers and spatial representation experiments"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.6,<3", "transformer-lens>=2.15,<3", "numpy>=1.24", "plotly>=5.20,<7"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+maplearn = "maplearn.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
