@@ -163,6 +163,8 @@ def emergence(args):
     paths = sorted(Path(args.run).glob("step-*.pt"))
     if not paths:
         raise ValueError("No checkpoints found")
+    if not (Path(args.run) / "test.json").exists():
+        raise ValueError("Wait for training to finish before analyzing checkpoint history")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=False)
     saved, grid, _ = load_checkpoint(paths[0], args.device)
