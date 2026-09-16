@@ -90,7 +90,8 @@ def main():
     portal_rows = []
     for name in ("portal-42", "portal-43"):
         m = data[name]["portal_changed_destination"]["overall"]
-        portal_rows.append(f"- **{name}:** {percent(m['accuracy'])} on {m['n']} test routes whose destination differs from the ordinary wrap world.")
+        baseline = data[name]["portal_changed_baselines"]["displacement_lookup"]["overall"]["accuracy"]
+        portal_rows.append(f"- **{name}:** {percent(m['accuracy'])} on {m['n']} test routes whose destination differs from the ordinary wrap world, versus {percent(baseline)} for the training-fitted displacement lookup.")
     document = f'''# What does a navigation transformer actually learn?
 
 A small transformer can solve unfamiliar routes while representing destination coordinates, but coordinates alone do not explain all of its behavior. In two wraparound runs, a missing checkerboard-parity feature explains a striking steering failure: coordinate-only one-cell shifts work {span(one)}, while adding parity raises success to {span(corrected)}. This is a new controlled experiment in this repository, not a recovered historical result or a claim of first discovery in the literature.

@@ -338,6 +338,7 @@ def final_analysis(args):
             if cell != row["cell"]:
                 changed.append(row)
         result["portal_changed_destination"] = metrics_for_predictions(predictions(model, changed, grid, args.device), changed, grid) if changed else None
+        result["portal_changed_baselines"] = baselines(train_rows, changed, grid) if changed else None
     (out / "final.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     print(json.dumps({"navigation": result["navigation"]["overall"], "output": str(out)}), flush=True)
 
