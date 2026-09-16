@@ -56,6 +56,6 @@ Graph-distance MDS probes and centroid-distance correlations are included as exp
 
 - [Protocol and caveats](PROTOCOL.md), [raw metrics](results/), and [offline interactive dashboard](dashboard.html).
 - `python scripts/reproduce.py --workers 2` reruns all training and analysis, including the parity follow-up. `python scripts/publish_results.py` rebuilds this report and the dashboard.
-- `results-sha256.json` records raw-result hashes. Every analyzed checkpoint has a SHA-256 in its history; checkpoint archives are published with the GitHub release. Published snapshots are for inference/analysis, not exact optimizer-state resumption.
+- `results-sha256.json` records raw-result hashes. Every analyzed checkpoint has a SHA-256 in its history; checkpoint archives have been created and hash-verified, with public distribution pending. Saved snapshots are for inference/analysis, not exact optimizer-state resumption.
 - CPU runs use the repository's pinned tested environment. Floating-point details can vary across platforms. Some initial runs record a dirty reconstruction revision; later configs also record source hashes. See the protocol for the development chronology.
 - No identical complete train/test routes; prefixes and subpaths can overlap. No unseen-labeling generalization, longer-route extrapolation, language-model transfer, or multiple architectural replications is claimed. Two joint seeds are a limited replication. Wilson intervals concern route sampling, not training-seed uncertainty.

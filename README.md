@@ -6,9 +6,9 @@ This project trains small transformers to navigate randomly labeled grids, follo
 
 The most useful result came from an experiment that failed. A linear coordinate intervention barely moved predictions by one cell, although two-cell and diagonal moves worked. Adding a checkerboard-parity feature repaired one-cell steering, reaching **97.5–99.3% target success** across directions and both seeds on initially correct routes. These interventions use known destination coordinates: they are diagnostic tests, not a deployable navigation method.
 
-[**Read the findings**](reports/FINDINGS.md) · [**Methods and limitations**](reports/PROTOCOL.md) · [**Raw metrics**](reports/results/) · [**Download dashboard and checkpoints**](https://github.com/magnus-em/how-a-transformer-learns-a-map/releases/tag/v0.2.0)
+[**Read the findings**](reports/FINDINGS.md) · [**Methods and limitations**](reports/PROTOCOL.md) · [**Raw metrics**](reports/results/) · [**Interactive dashboard file**](reports/dashboard.html)
 
-Download `dashboard.html` from the release and open it in a browser; the interactive charts work offline. GitHub's source view does not run the dashboard.
+Download `reports/dashboard.html` with GitHub's download button and open it in a browser; the interactive charts work offline. GitHub's source view does not run the dashboard.
 
 ## Three questions
 
@@ -52,9 +52,9 @@ The runner trains all six fixed configurations, evaluates all checkpoints, runs 
 
 The full study uses local computation and takes substantially longer than the smoke check; runtime depends on hardware. The committed metrics are the actual measured run outputs, not example values.
 
-## Analyze the published weights
+## Analyze saved weights
 
-Download one checkpoint archive from the release, then:
+All 246 checkpoints were generated and packaged into six hash-verified archives. Public archive distribution is pending; the source code and all measured results are available here. Train locally with the full-study command above, or, if you have a checkpoint archive, extract and analyze it as follows:
 
 ```sh
 mkdir -p runs
@@ -64,7 +64,7 @@ python -m maplearn.research final --checkpoint runs/wrap-42/step-007816.pt --out
 python -m maplearn.parity --checkpoint runs/wrap-42/step-007816.pt --out runs/wrap-42-parity-augmented
 ```
 
-Each archive has all 41 snapshots, training configuration, validation history, and final training-script test result. Check archive hashes against `checkpoint-manifest.json`; individual checkpoint hashes are in the committed emergence histories. Result-file hashes are in `reports/results-sha256.json`.
+Each archive has all 41 snapshots, training configuration, validation history, and final training-script test result. Check archive hashes against `reports/checkpoint-manifest.json`; individual checkpoint hashes are in the committed emergence histories. Result-file hashes are in `reports/results-sha256.json`.
 
 ## Small smoke check
 
