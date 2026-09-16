@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maplearn"
-version = "0.1.0"
+version = "0.2.0"
 description = "Grid navigation transformers and spatial representation experiments"
 requires-python = ">=3.10"
 dependencies = ["torch>=2.6,<3", "transformer-lens>=2.15,<3", "numpy>=1.24", "plotly>=5.20,<7"]

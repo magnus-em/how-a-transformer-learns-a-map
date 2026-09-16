@@ -56,6 +56,16 @@ def analyze_one(spec):
         source_args = ["--run", str(run_dir)] if command == "emergence" else ["--checkpoint", str(run_dir / "step-007816.pt")]
         run([sys.executable, "-m", "maplearn.research", command, *source_args, "--out", str(target)],
             Path(f"runs/{name}-{command}.log"))
+    if topology == "wrap":
+        target = Path("runs") / f"{name}-parity-augmented"
+        if (target / "parity.json").exists():
+            saved = json.loads((target / "parity.json").read_text())
+            if "parity_augmented_steering" in saved:
+                return
+        if target.exists():
+            raise ValueError(f"Incomplete parity analysis at {target}; move it aside before restarting")
+        run([sys.executable, "-m", "maplearn.parity", "--checkpoint", str(run_dir / "step-007816.pt"),
+             "--out", str(target)], Path(f"runs/{name}-parity-augmented.log"))
 
 
 def main():
