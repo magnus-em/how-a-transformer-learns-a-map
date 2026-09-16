@@ -15,7 +15,8 @@ def check_intervals(value):
             if n:
                 assert abs(value['accuracy'] - k/n) < 1e-12
                 lo, hi = value['ci95']
-                assert 0 <= lo <= k/n + 1e-12 <= hi + 1e-12 <= 1 + 1e-12
+                assert 0 <= lo <= hi <= 1
+                assert lo - 1e-12 <= k/n <= hi + 1e-12
             else:
                 assert value['accuracy'] is None
         for v in value.values():

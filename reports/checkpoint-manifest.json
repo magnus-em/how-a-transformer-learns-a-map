@@ -1,0 +1,32 @@
+{
+  "wrap-42-checkpoints.tar.gz": {
+    "sha256": "bdae7c9331207d3827de2fc00009f3b636acef219d377a572bfa5a13a8b3091c",
+    "bytes": 63698032,
+    "checkpoints": 41
+  },
+  "wrap-43-checkpoints.tar.gz": {
+    "sha256": "6161018903de6485075bdd68aa74355e660257595d8e40a1bee6348742a90e73",
+    "bytes": 63716508,
+    "checkpoints": 41
+  },
+  "bounded-42-checkpoints.tar.gz": {
+    "sha256": "50ef6fbc768865eeedf097a19c60c268b34d51ce92bb085d37f1621e962cf2ec",
+    "bytes": 63656483,
+    "checkpoints": 41
+  },
+  "bounded-43-checkpoints.tar.gz": {
+    "sha256": "59b6a4981aaaaebd4bf168bc4e3d252ccd36ce6b0cdbd3e7db274e6042b3fffe",
+    "bytes": 63680991,
+    "checkpoints": 41
+  },
+  "portal-42-checkpoints.tar.gz": {
+    "sha256": "6123769661dba5de8db48a2d9b097671c3580b32afc218ed1d5aacfe4652a5ea",
+    "bytes": 63727645,
+    "checkpoints": 41
+  },
+  "portal-43-checkpoints.tar.gz": {
+    "sha256": "550e52007fea844461769d067bdbe88d89ed9d880a7eb6f170bb18967c753936",
+    "bytes": 63732695,
+    "checkpoints": 41
+  }
+}

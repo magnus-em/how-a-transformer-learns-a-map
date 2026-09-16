@@ -1,77 +1,92 @@
 # How a Transformer Learns a Map
 
-Reconstruction of a lost research project: train a small transformer to follow routes on randomly labeled 8×8 grids, then inspect whether it develops reusable spatial representations.
+**Can a transformer learn a reusable map—and can we make it get lost in a predictable way?**
 
-**Status:** working reconstruction, not recovered original code. Original weights, exact hyperparameters, and historical findings are unavailable. The torus, boundary warping, and causal direction-feature findings are hypotheses to reproduce. A short smoke run verifies execution only.
+This project trains small transformers to navigate randomly labeled grids, follows their internal representations across training, and tests those representations with controlled interventions. Six trained models cover bounded, wraparound, and shortcut-connected worlds across two seeds.
 
-## What is implemented
+The most useful result came from an experiment that failed. A linear coordinate intervention barely moved predictions by one cell, although two-cell and diagonal moves worked. Adding a checkerboard-parity feature repaired one-cell steering, reaching **97.5–99.3% target success** across directions and both seeds on initially correct routes. These interventions use known destination coordinates: they are diagnostic tests, not a deployable navigation method.
 
-- Bounded and periodic (wraparound) grids with a fixed, seeded random permutation of cell labels.
-- Unique routes with 2–12 legal moves; deterministic hash partitions prevent identical complete routes from crossing train/validation/test splits.
-- A two-layer, four-head PyTorch transformer built with TransformerLens, trained to predict the final cell from the initial cell and direction sequence.
-- Defaults of 250,000 **training** routes and up to 40 evenly spaced checkpoints per topology, plus 5,000 validation and 5,000 test routes. Counts are reconstruction choices; the résumé did not specify allocation.
-- Validation-fitted coordinate probes, held-out probe R², residual PCA, spatial-subspace ablation with a matched-rank random control, and eastward activation steering.
-- Standalone interactive Plotly HTML generated from actual checkpoint activations.
+[**Read the findings**](reports/FINDINGS.md) · [**Methods and limitations**](reports/PROTOCOL.md) · [**Raw metrics**](reports/results/) · [**Download dashboard and checkpoints**](https://github.com/magnus-em/how-a-transformer-learns-a-map/releases/tag/v0.2.0)
 
-## Setup
+Download `dashboard.html` from the release and open it in a browser; the interactive charts work offline. GitHub's source view does not run the dashboard.
 
-Use Python 3.11 or 3.12:
+## Three questions
+
+1. **When does the map become decodable?** Track navigation, coordinate probes, and five shuffled-cell controls at 40 trained checkpoints plus initialization, in both transformer layers.
+2. **Does the model use those features?** Remove x/y features and compare against rank- and norm-matched random controls. Test all four steering directions, strengths, two-cell shifts, diagonal shifts, and a parity-augmented encoder.
+3. **What if the world has a shortcut?** Rewire two edges so route order matters, then compare a separately trained model against a displacement-lookup baseline, including the subset of routes with changed destinations.
+
+## Study at a glance
+
+- 8×8 cells with one fixed random label permutation per seed; inputs contain only the start cell and moves.
+- Two layers, four attention heads, width 128, MLP width 512; final destination supervision.
+- 250,000 unique training routes per model, 2–12 legal moves, eight epochs, AdamW at 0.001.
+- Six models, 246 saved snapshots, 2,048 final held-out analysis routes per model.
+- Deterministic complete-route partitions, validation-fitted probes, random controls, path-length breakdowns, and route-sampling confidence intervals.
+
+The evidence supports behaviorally relevant coordinate and parity features. It does **not** establish a complete circuit, a literal internal torus, an edge-warping result, unseen-map transfer, or a general mechanism across architectures. The parity follow-up is exploratory and replicated once. See the protocol for all qualifications.
+
+## Install and test
+
+Use Python 3.11 or 3.12. From the repository root:
 
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements-tested.txt
 pip install -e '.[dev]'
 pytest -q
 ```
 
-`requirements-tested.txt` records the exact local test environment. For a closer recreation, install it before `pip install -e '.[dev]'`; some wheels may differ by operating system.
+The tested study ran on macOS Apple Silicon using CPU. Some package wheels differ across operating systems. `requirements-tested.txt` records the actual environment; `pyproject.toml` provides broader dependency ranges.
 
-## Quick end-to-end check
-
-```sh
-maplearn train --topology wrap --out runs/smoke \
-  --routes 256 --eval-routes 64 --epochs 2 --batch-size 32 \
-  --d-model 32 --checkpoints 2
-maplearn analyze --checkpoint runs/smoke/step-000016.pt \
-  --out runs/smoke-analysis --routes 128
-```
-
-Open `runs/smoke-analysis/map.html`. This tiny run is intentionally too short to establish any research result. Existing output directories are rejected to protect previous experiments.
-
-## Full experiments
+## Reproduce the full study
 
 ```sh
-maplearn train --topology wrap --out runs/wrap --device cuda
-maplearn train --topology bounded --out runs/bounded --device cuda
-maplearn analyze --checkpoint runs/wrap/step-003908.pt \
-  --out runs/wrap-analysis --device cuda
-maplearn analyze --checkpoint runs/bounded/step-003908.pt \
-  --out runs/bounded-analysis --device cuda
+python scripts/reproduce.py --workers 2
+python scripts/publish_results.py
+python scripts/write_readme.py
 ```
 
-Use `--device cpu` for CPU or `--device mps` on compatible Apple Silicon machines. CUDA is suggested for full experiments, but no full-run runtime or convergence guarantee is established. The final step shown above follows the default counts and batch size; use the actual filename if changing them.
+The runner trains all six fixed configurations, evaluates all checkpoints, runs final probes/interventions/baselines, and performs the wraparound parity follow-up. `--workers 2` runs two training processes at a time; analysis runs sequentially. Use `--train-only` or `--analysis-only` to run one phase. Complete matching outputs are reused. Incomplete output directories raise an error; move them aside to rerun. Training snapshots do not contain optimizer states.
 
-Each training directory contains the grid labeling and configuration, validation metrics at checkpoints, saved model states, and one final held-out test result. Checkpoints are inference/analysis snapshots, not exact optimizer-resume snapshots. Run files and weights are ignored by Git. Publish validated weights separately as release assets when ready.
+The full study uses local computation and takes substantially longer than the smoke check; runtime depends on hardware. The committed metrics are the actual measured run outputs, not example values.
 
-## Interpretation and experimental limits
+## Analyze the published weights
 
-The task uses one fixed map per run. Randomly changing labels per route would make navigation ambiguous without supplying a map. Bounded routes sample only valid moves, with no wall-clamping convention. Directions are N, E, S, W with north decreasing y.
+Download one checkpoint archive from the release, then:
 
-Only the final destination is supervised. The input contains no intermediate destination labels. Padding follows the last move; causal attention ensures that it cannot influence the queried position. This is a reconstruction decision, not a claim about the original tokenizer or objective.
+```sh
+mkdir -p runs
+tar -xzf wrap-42-checkpoints.tar.gz -C runs
+python -m maplearn.research emergence --run runs/wrap-42 --out runs/wrap-42-emergence
+python -m maplearn.research final --checkpoint runs/wrap-42/step-007816.pt --out runs/wrap-42-final
+python -m maplearn.parity --checkpoint runs/wrap-42/step-007816.pt --out runs/wrap-42-parity-augmented
+```
 
-Complete-route holdouts can share prefixes and subpaths with training. They test novel route sequences on a familiar labeling, not unseen-map transfer or length extrapolation. Route-memorization baselines, longer-path testing, and multiple seeds remain follow-up work.
+Each archive has all 41 snapshots, training configuration, validation history, and final training-script test result. Check archive hashes against `checkpoint-manifest.json`; individual checkpoint hashes are in the committed emergence histories. Result-file hashes are in `reports/results-sha256.json`.
 
-Wraparound probes target `(cos x, sin x, cos y, sin y)`; bounded probes target scaled `(x, y)`. Probe targets encode a geometric hypothesis; a probe plot is **not** evidence that the network spontaneously forms a torus. The PCA panel is unsupervised. Compare layers, seeds, shuffled-label controls, generalization, and intervention outcomes before drawing conclusions.
+## Small smoke check
 
-Analysis fits probes and spatial encoding directions on validation routes, then scores disjoint test routes. Ablation removes the centered activation component in the fitted spatial span. Steering adds an encoded delta from the true destination to its eastern neighbor (excluding illegal bounded moves). This uses known coordinates as an experimental intervention, not as a deployable navigation algorithm. Compare shifted-target accuracy with `baseline_east`; compare ablation damage with the random control. A single intervention is not enough to establish causality.
+```sh
+maplearn train --topology wrap --out runs/smoke-new --routes 256 --eval-routes 64 --epochs 2 --batch-size 32 --d-model 32 --checkpoints 2
+maplearn analyze --checkpoint runs/smoke-new/step-000016.pt --out runs/smoke-new-analysis --routes 128
+```
 
-## Next research milestones
+This short run checks execution only, not research conclusions. `maplearn analyze` is the original compact single-checkpoint visualization; `maplearn.research` contains the controlled study.
 
-1. Train both topologies to meaningful held-out navigation accuracy and repeat across seeds.
-2. Add path-length and route-memorization baselines, shuffled-coordinate probes, and uncertainty estimates.
-3. Track geometry across all 40 checkpoints; test all four directions and intervention strengths.
-4. Publish reproducible result tables and trained weights only after evaluating these checks.
+## Files
 
-## Reference
+- `src/maplearn/data.py`: deterministic route generation and all three worlds.
+- `src/maplearn/train.py`: training, checkpointing, and provenance.
+- `src/maplearn/research.py`: checkpoint probes, interventions, baselines, and graph comparisons.
+- `src/maplearn/parity.py`: the exploratory parity follow-up.
+- `scripts/reproduce.py`: fixed full-study runner.
+- `scripts/publish_results.py`: findings and offline dashboard, generated from raw results.
+- `scripts/package_checkpoints.py`: hash-verified release archives.
 
-Uses the documented [TransformerLens hook system](https://transformerlensorg.github.io/TransformerLens/generated/code/transformer_lens.HookedRootModule.html) for caching residual states and applying temporary interventions. TransformerLens is held below version 3 to keep the reconstruction on the tested API family.
+## Project history
+
+The repository began as a reconstruction of an earlier project; its initial smoke tests did not verify historical geometry or causality claims. This study produces new, narrower evidence. [Initial reconstruction validation](reports/INITIAL_RECONSTRUCTION.md) is retained for provenance, and [current validation](VALIDATION.md) records the expanded checks. No claim of novelty over prior literature is made.
+
+Built with PyTorch, [TransformerLens](https://github.com/TransformerLensOrg/TransformerLens), NumPy, and Plotly.

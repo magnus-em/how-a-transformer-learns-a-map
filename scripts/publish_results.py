@@ -108,7 +108,7 @@ Coordinate probes use two dimensions for bounded worlds and four sine/cosine dim
 
 {chr(10).join(emergence_rows)}
 
-Both runs show decodable spatial information before high navigation accuracy. This observation is bounded by the checkpoint spacing; it does not establish an exact onset, a discrete phase transition, or that representation formation causes later learning. All 41 checkpoints and both layers are included in the raw results and dashboard. Shuffled-cell decoding grows substantially in the final layer, illustrating why probing alone is insufficient.
+Both runs show decodable spatial information before high navigation accuracy. This observation is bounded by the checkpoint spacing; it does not establish an exact onset, a discrete phase transition, or that representation formation causes later learning. All 41 checkpoints and both layers are included in the raw results; the dashboard plots the first layer. Shuffled-cell decoding grows substantially in the final layer, illustrating why probing alone is insufficient.
 
 ## Does the model use those features?
 
@@ -140,7 +140,7 @@ Graph-distance MDS probes and centroid-distance correlations are included as exp
 ## Reproduction, provenance, and limits
 
 - [Protocol and caveats](PROTOCOL.md), [raw metrics](results/), and [offline interactive dashboard](dashboard.html).
-- `python scripts/reproduce.py --workers 2` reruns all training and primary analysis. `python -m maplearn.parity --checkpoint runs/wrap-42/step-007816.pt --out runs/wrap-42-parity-augmented` reruns the follow-up; repeat with seed 43. `python scripts/publish_results.py` rebuilds this report.
+- `python scripts/reproduce.py --workers 2` reruns all training and analysis, including the parity follow-up. `python scripts/publish_results.py` rebuilds this report and the dashboard.
 - `results-sha256.json` records raw-result hashes. Every analyzed checkpoint has a SHA-256 in its history; checkpoint archives are published with the GitHub release. Published snapshots are for inference/analysis, not exact optimizer-state resumption.
 - CPU runs use the repository's pinned tested environment. Floating-point details can vary across platforms. Some initial runs record a dirty reconstruction revision; later configs also record source hashes. See the protocol for the development chronology.
 - No identical complete train/test routes; prefixes and subpaths can overlap. No unseen-labeling generalization, longer-route extrapolation, language-model transfer, or multiple architectural replications is claimed. Two joint seeds are a limited replication. Wilson intervals concern route sampling, not training-seed uncertainty.
