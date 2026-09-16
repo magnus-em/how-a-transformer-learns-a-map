@@ -133,6 +133,8 @@ def metrics_for_predictions(predicted, rows, grid):
 
 
 def probe_metrics(a, b, fit_cells, held_cells, grid, seed, controls=5):
+    if set(fit_cells) != set(range(grid.size**2)):
+        raise ValueError("Increase fit routes to cover every destination cell")
     targets = coordinates(range(grid.size**2), grid)
     result = {"coordinate_r2": r2(targets[held_cells], predict_probe(
         ridge_fit(a, targets[fit_cells]), b))}
@@ -190,7 +192,7 @@ def emergence(args):
                           "probes": {k: v["coordinate_r2"] for k, v in result["layers"].items()}}), flush=True)
         (out / "emergence.json").write_text(json.dumps({"config": config, "probe_routes_per_split": args.routes,
                                                     "fit_seed": config["seed"] + 101,
-                                                    "held_seed": config["seed"] + 102, "history": history}, indent=2))
+                                                    "held_seed": config["seed"] + 102, "history": history}, indent=2, allow_nan=False))
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
                         subplot_titles=("Held-out navigation", "Linear decoding: geometry and shuffled-cell control"))
     steps = [r["step"] for r in history]
@@ -322,7 +324,7 @@ def final_analysis(args):
         result["layers"][hook] = {
             "probes": probe_metrics(a, b, fit_cells, held_cells, grid, config["seed"], args.controls),
             "interventions": intervention_metrics(model, held, grid, hook, b, a, fit_cells, args.device, config["seed"], args.controls)}
-        (out / "final.json").write_text(json.dumps(result, indent=2))
+        (out / "final.json").write_text(json.dumps(result, indent=2, allow_nan=False))
         print(json.dumps({"hook": hook, "probes": result["layers"][hook]["probes"]}), flush=True)
     # Common legal direction sequences with changed destinations distinguish
     # shortcut-aware navigation from treating all moves as ordinary grid steps.
@@ -336,7 +338,7 @@ def final_analysis(args):
             if cell != row["cell"]:
                 changed.append(row)
         result["portal_changed_destination"] = metrics_for_predictions(predictions(model, changed, grid, args.device), changed, grid) if changed else None
-    (out / "final.json").write_text(json.dumps(result, indent=2))
+    (out / "final.json").write_text(json.dumps(result, indent=2, allow_nan=False))
     print(json.dumps({"navigation": result["navigation"]["overall"], "output": str(out)}), flush=True)
 
 
