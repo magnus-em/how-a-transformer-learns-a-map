@@ -16,8 +16,10 @@ class Grid:
     seed: int = 42
 
     def __post_init__(self):
-        if self.size < 2 or self.topology not in ("wrap", "bounded"):
-            raise ValueError("size must be >= 2; topology must be wrap or bounded")
+        if self.size < 2 or self.topology not in ("wrap", "bounded", "portal"):
+            raise ValueError("size must be >= 2; topology must be wrap, bounded or portal")
+        if self.topology == "portal" and self.size < 4:
+            raise ValueError("Portal worlds require size >= 4")
 
     @property
     def labels(self):
@@ -30,10 +32,20 @@ class Grid:
         return self.size**2 + 5  # cells, four moves, padding
 
     def step(self, cell, direction):
+        if not 0 <= cell < self.size**2 or not 0 <= direction < 4:
+            raise ValueError("Invalid cell or direction")
+        if self.topology == "portal":
+            # Rewire two east/west edges, preserving reverse moves and degree.
+            # The two origins are separated by half the grid along both axes.
+            a, b = 0, (self.size // 2) * (self.size + 1)
+            rewired = {(a, 1): b + 1, (b + 1, 3): a,
+                       (b, 1): a + 1, (a + 1, 3): b}
+            if (cell, direction) in rewired:
+                return rewired[cell, direction]
         x, y = cell % self.size, cell // self.size
         dx, dy = DIRECTIONS[direction]
         x, y = x + dx, y + dy
-        if self.topology == "wrap":
+        if self.topology in ("wrap", "portal"):
             x, y = x % self.size, y % self.size
         elif not (0 <= x < self.size and 0 <= y < self.size):
             raise ValueError("Move leaves bounded grid")

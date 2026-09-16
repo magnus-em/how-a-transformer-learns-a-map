@@ -5,7 +5,7 @@ def main():
     parser = argparse.ArgumentParser(description="How a Transformer Learns a Map")
     sub = parser.add_subparsers(dest="command", required=True)
     train = sub.add_parser("train")
-    train.add_argument("--topology", choices=["wrap", "bounded"], default="wrap")
+    train.add_argument("--topology", choices=["wrap", "bounded", "portal"], default="wrap")
     train.add_argument("--out", required=True)
     train.add_argument("--size", type=int, default=8)
     train.add_argument("--seed", type=int, default=42)

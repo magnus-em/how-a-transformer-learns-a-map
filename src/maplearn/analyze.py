@@ -15,7 +15,7 @@ from .model import make_model
 def coordinates(cells, grid):
     cells = np.asarray(cells)
     x, y = cells % grid.size, cells // grid.size
-    if grid.topology == "wrap":
+    if grid.topology in ("wrap", "portal"):
         return np.column_stack(
             (
                 np.cos(2 * np.pi * x / grid.size),
@@ -47,7 +47,8 @@ def analyze(args):
             "Analysis needs at least three routes and positive ridge regularization"
         )
     torch.set_num_threads(args.threads)
-    checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+    with torch.serialization.safe_globals([torch.torch_version.TorchVersion]):
+        checkpoint = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
     config = checkpoint["config"]
     grid = Grid(**config["grid"])
     model = make_model(

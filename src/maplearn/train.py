@@ -1,5 +1,9 @@
 import json
+import hashlib
 import math
+import platform
+import subprocess
+import time
 from dataclasses import asdict
 from pathlib import Path
 
@@ -56,9 +60,30 @@ def train(args):
     config = {k: v for k, v in vars(args).items() if k != "func"}
     config["grid"] = asdict(grid)
     config["labels"] = grid.labels
+    source_root = Path(__file__).resolve().parent
+    try:
+        revision = subprocess.check_output(
+            ["git", "-C", str(source_root), "rev-parse", "HEAD"], text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        dirty = bool(subprocess.check_output(
+            ["git", "-C", str(source_root), "status", "--porcelain"], text=True
+        ).strip())
+    except (OSError, subprocess.CalledProcessError):
+        revision, dirty = None, None
+    config["environment"] = {
+        "python": platform.python_version(), "torch": str(torch.__version__),
+        "platform": platform.platform(),
+        "git_revision": revision, "git_dirty": dirty,
+        "source_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                          for p in sorted(source_root.glob("*.py"))},
+    }
     (out / "config.json").write_text(json.dumps(config, indent=2))
+    torch.save({"model": model.state_dict(), "config": config, "step": 0},
+               out / "step-000000.pt")
     generator = torch.Generator().manual_seed(args.seed)
     step = 0
+    started = time.monotonic()
     with (out / "metrics.jsonl").open("w") as log:
         for epoch in range(args.epochs):
             order = torch.randperm(len(rows), generator=generator).tolist()
@@ -78,6 +103,7 @@ def train(args):
                 if step in schedule:
                     metrics = {
                         "step": step,
+                        "elapsed_seconds": time.monotonic() - started,
                         "epoch": epoch + 1,
                         "train_batch_loss": loss.item(),
                         "val": evaluate(model, val, grid, args.batch_size, args.device),
